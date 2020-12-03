@@ -1,10 +1,14 @@
 package io.chikeem90.github.springboot.web;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.util.List;
 
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,9 +17,16 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MockMvcBuilder;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.chikeem90.github.springboot.domain.posts.Posts;
 import io.chikeem90.github.springboot.domain.posts.PostsRepository;
@@ -31,12 +42,25 @@ public class PostsApiControllerTest {
 	@Autowired
 	private PostsRepository postsRepository;
 
+	@Autowired
+	private WebApplicationContext context;
+
+	private MockMvc mvc;
+
+	@Before
+	public void setUp() {
+		mvc = MockMvcBuilders.webAppContextSetup(context)
+							.apply(springSecurity())
+							.build();
+	}
+
 	@After
 	public void tearDown() throws Exception {
 		postsRepository.deleteAll();
 	}
 
 	@Test
+	@WithMockUser(roles = "USER")
 	public void Posts_등록된다() throws Exception {
 	    // given
 	    String title = "title";
@@ -49,11 +73,16 @@ public class PostsApiControllerTest {
 															.build();
 
 	    // when
-		ResponseEntity<Long> responseEntity = restTemplate.postForEntity("/api/v1/posts", requestDto, Long.class);
+		// ResponseEntity<Long> responseEntity = restTemplate.postForEntity("/api/v1/posts", requestDto, Long.class);
+		// MockMvc를 사용하는 것으로 수정
+		mvc.perform(post("/api/v1/posts")
+				.contentType(MediaType.APPLICATION_JSON_UTF8)
+				.content(new ObjectMapper().writeValueAsString(requestDto)))
+				.andExpect(status().isOk());
 
 	    // then
-		assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
-		assertThat(responseEntity.getBody()).isGreaterThan(0L);
+		// assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+		// assertThat(responseEntity.getBody()).isGreaterThan(0L);
 
 		List<Posts> all = postsRepository.findAll();
 		assertThat(all.get(0).getTitle()).isEqualTo(title);
@@ -62,6 +91,7 @@ public class PostsApiControllerTest {
 	}
 
 	@Test
+	@WithMockUser(roles = "USER")
 	public void Posts_수정된다() throws Exception {
 	    // given
 		Posts savedPosts = postsRepository.save(Posts.builder().title("title").content("content").author("author").build());
@@ -72,14 +102,18 @@ public class PostsApiControllerTest {
 
 		PostsUpdateRequestDto requestDto = PostsUpdateRequestDto.builder().title(expectedTitle).content(expectedContent).build();
 
-		HttpEntity<PostsUpdateRequestDto> requestEntity = new HttpEntity<>(requestDto);
+		// HttpEntity<PostsUpdateRequestDto> requestEntity = new HttpEntity<>(requestDto);
 
 		// when
-		ResponseEntity<Long> responseEntity = restTemplate.exchange("/api/v1/posts/"+updateId, HttpMethod.PUT, requestEntity, Long.class);
+		// ResponseEntity<Long> responseEntity = restTemplate.exchange("/api/v1/posts/"+updateId, HttpMethod.PUT, requestEntity, Long.class);
+		mvc.perform(put("/api/v1/posts/"+updateId)
+				.contentType(MediaType.APPLICATION_JSON_UTF8)
+				.content(new ObjectMapper().writeValueAsString(requestDto)))
+				.andExpect(status().isOk());
 
 	    // then
-		assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
-		assertThat(responseEntity.getBody()).isGreaterThan(0L);
+		// assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+		// assertThat(responseEntity.getBody()).isGreaterThan(0L);
 
 		List<Posts> all = postsRepository.findAll();
 		assertThat(all.get(0).getTitle()).isEqualTo(expectedTitle);
