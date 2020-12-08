@@ -1,6 +1,6 @@
 language: java
 jdk:
-  - oraclejdk11
+  - openjdk8
 
 branches:
   only:
@@ -12,6 +12,9 @@ cache:
     - '$HOME/.gradle'
 
 script: "./gradlew clean build"
+
+before_install:
+  - chmod +x gradlew
 
 notifications:
   email:
