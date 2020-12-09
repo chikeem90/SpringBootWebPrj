@@ -17,7 +17,7 @@ before_install:
   - chmod +x gradlew
 
 before_deploy:
-  - zip -r spring-boot-test chikeem90/SpringBootWebPrj
+  - zip -r spring-boot-test *
   - mkdir -p deploy
   - mv spring-boot-test.zip deploy/spring-boot-test.zip
 
