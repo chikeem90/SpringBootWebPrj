@@ -7,7 +7,7 @@ import org.springframework.mock.env.MockEnvironment;
 
 public class ProfilesControllerUnitTest {
 	@Test
-	private void real_profile이_조회된다() {
+	public void real_profile이_조회된다() {
 		// given
 		String expectedProfile = "real";
 		MockEnvironment env = new MockEnvironment();
@@ -45,7 +45,7 @@ public class ProfilesControllerUnitTest {
 	@Test
 	public void active_profile이_없으면_default가_조회된다() throws Exception {
 	    // given
-	    String expectedProfile = "defalut";
+	    String expectedProfile = "default";
 	    MockEnvironment env = new MockEnvironment();
 	    ProfilesController controller = new ProfilesController(env);
 
